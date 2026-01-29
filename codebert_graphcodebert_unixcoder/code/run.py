@@ -13,7 +13,7 @@ from evaluator.evaluator import evaluators
 # from trie import Trie, TrieNode  # 确保在加载pickle文件前导入Trie类
 # from attacker import Attacker, InsAttacker, AttackerRandom, InsAttackerRandom  # 将在后面实现
 from attacker import AttackerRandom,Attacker,InsAttacker,Attackertrain,InsAttackertrain,AttackerRandomtrain
-
+import pandas as pd
 
 import numpy as np
 import torch
@@ -105,7 +105,7 @@ def convert_examples_to_features(js, tokenizer, args, attack_flag):
             re.DOTALL | re.MULTILINE
         )
         cleaned_code = re.sub(pattern, '', js["func"])
-
+        # code = " ".join(js["func"].split())
         # cleaned_code1 = [tok for tok in cleaned_code if tok.strip() and tok != '\n']
         # 3. 对原始代码进行分词
         code_tokens = tokenizer.tokenize(cleaned_code)
@@ -165,7 +165,6 @@ class TextDataset(Dataset):
         return (
             torch.tensor(self.examples[i].input_ids),
             torch.tensor(self.examples[i].label),
-            self.examples[i].idx
             # self.uids[i],
             # self.instab[i],
             # self.code_tokens[i]
@@ -197,6 +196,10 @@ def train(args, train_dataset, model, tokenizer):
         num_workers=4,
         pin_memory=True,
     )
+    if args.do_attacktrain:    
+        attack_flag = 1
+        attack_dataset = TextDataset(tokenizer, args, args.Originally_train_data_file, attack_flag)
+        attack_flag = 0
     args.max_steps = args.epoch * len(train_dataloader)
     args.save_steps = len(train_dataloader)
     args.warmup_steps = len(train_dataloader)
@@ -438,8 +441,9 @@ def train(args, train_dataset, model, tokenizer):
         
         # 每个epoch结束后直接调用attack函数
         test(args, model, tokenizer)
-        # logger.info("***** Epoch %d 结束，开始执行对抗攻击 *****", idx)
-        # attacker(args, model, tokenizer)
+        if args.do_attacktrain:    
+            logger.info("***** Epoch %d 结束，开始执行对抗攻击 *****", idx)
+            attacker(args, attack_dataset,model, tokenizer)
         # test(args, model, tokenizer)
 
 
@@ -491,7 +495,23 @@ def evaluate(args, model, tokenizer, eval_when_training=False):
         nb_eval_steps += 1
     logits = np.concatenate(logits, 0)
     labels = np.concatenate(labels, 0)
-    preds = logits[:, 0] > 0.5
+    
+    # # 定义函数获取概率最大的类别索引
+    # def getClass(x):
+    #     return x.index(max(x))
+    
+    # # 将预测转换为pandas Series并应用getClass函数
+    # probs = pd.Series(logits.tolist())
+    # preds = probs.apply(getClass)
+    # # 重置索引
+    # preds.reset_index(drop=True, inplace=True)    
+    
+    
+    
+    
+    
+    # preds = logits[:, 0] > 0.5
+    preds = logits > 0.5
     eval_acc = np.mean(labels == preds)
     eval_loss = eval_loss / nb_eval_steps
     perplexity = torch.tensor(eval_loss)
@@ -535,8 +555,6 @@ def test(args, model, tokenizer):
     for batch in tqdm(eval_dataloader, total=len(eval_dataloader)):
         inputs = batch[0].to(args.device)
         label = batch[1].to(args.device)
-        idx = batch[2]
-        # print(idx)
         with torch.no_grad():
             logit = model(inputs)
             logits.append(logit.cpu().numpy())
@@ -544,9 +562,27 @@ def test(args, model, tokenizer):
 
     logits = np.concatenate(logits, 0)
     labels = np.concatenate(labels, 0)
-    preds = logits[:, 0] > 0.5
+    
+    
+    # # 定义函数获取概率最大的类别索引
+    # def getClass(x):
+    #     return x.index(max(x))
+    
+    # # 将预测转换为pandas Series并应用getClass函数
+    # probs = pd.Series(logits.tolist())
+    # preds = probs.apply(getClass)
+    # # 重置索引
+    # preds.reset_index(drop=True, inplace=True)
+    # preds = preds.to_numpy()   
+    
+    
+    
+    
+    # preds = logits[:, 0] > 0.5
+    preds = logits > 0.5
     test_acc=np.mean(labels==preds)
     
+   
     # 保存为CSV文件
     import csv
     
@@ -565,13 +601,12 @@ def test(args, model, tokenizer):
         for example, label, pred in zip(eval_dataset.examples, labels, preds):
             writer.writerow([example.idx, int(label), int(pred)])
     
-    print(f"Results saved to {csv_path}")
+    print(f"Results saved to {csv_path}")    
     
-    # 保留原有的predictions.txt输出
     with open(os.path.join(args.output_dir, "predictions.txt"), "w") as f:
         for example, pred in zip(eval_dataset.examples, preds):
             if pred:
-                f.write(example.idx + "\t1\n")
+                f.write(example.idx + "\t1\n") 
             else:
                 f.write(example.idx + "\t0\n")
                 
@@ -580,7 +615,7 @@ def test(args, model, tokenizer):
     }
     if result["test_acc"] > 0.64:
         args.test_best = result["test_acc"]
-        output_dir = "/root/workspace/zlt/Ygraphcodebert/code/bast_model"
+        output_dir = "/root/workspace/zlt/unixcode_cnn/code/bast_model"
         model_to_save = (
             model.module if hasattr(model, "module") else model
         )
@@ -590,13 +625,13 @@ def test(args, model, tokenizer):
         logger.info("Saving test model to %s", output_dirs)
     scores=evaluators(args)
     print(scores)
-    output_dir = "/root/workspace/zlt/Ygraphcodebert/code"
+    output_dir = "/root/workspace/zlt/unixcode_cnn/code"
     with open(os.path.join(output_dir, "log_acc.txt"), "a") as f:
          f.write("{}\n".format(scores))
     return result
 
 
-def attacker(args, model, tokenizer):
+def attacker(args,attack_dataset, model, tokenizer):
     """
     执行对抗攻击
     """
@@ -608,14 +643,14 @@ def attacker(args, model, tokenizer):
     attack_flag = 1
     # 加载测试数据
     if args.do_attack:
-        eval_dataset = TextDataset(tokenizer, args, args.test_data_file, attack_flag)
+        # eval_dataset = TextDataset(tokenizer, args, args.test_data_file, attack_flag)
         uid_test_file = os.path.join(test_data_dir, 'uid_test.jsonl')
         uid_test = set()
         if os.path.exists(uid_test_file):
             with open(uid_test_file, 'r') as f:
                 uid_test = {json.loads(line)['uid'] for line in f}
     else:
-        train_dataset = TextDataset(tokenizer, args, args.Originally_train_data_file, attack_flag)
+        # train_dataset = TextDataset(tokenizer, args, args.Originally_train_data_file, attack_flag)
         uid_train_file = os.path.join(test_data_dir, 'uid_train.jsonl')
         # 读取所有uid
         uid_train = set()
@@ -639,30 +674,30 @@ def attacker(args, model, tokenizer):
 
     # #使用梯度的词替换
     # attacker = Attacker(model, tokenizer, uid_test, args)
-    # results = attacker.attack_all(args,eval_dataset, args.n_candidate ,args.n_iter)    
+    # results = attacker.attack_all(args,attack_dataset, args.n_candidate ,args.n_iter)    
     #增加或删除部分语句
-    # attacker = InsAttacker(model, tokenizer,args)
-    # results = attacker.attack_all(args,eval_dataset, args.n_candidate ,args.n_iter)  
+    #attacker = InsAttacker(model, tokenizer,args)
+    #results = attacker.attack_all(args,attack_dataset, args.n_candidate ,args.n_iter)  
 
-    # # #使用随机词替换
-    attacker = AttackerRandom(model, tokenizer, uid_test, args)
-    results = attacker.attack_all(args,eval_dataset,args.n_iter)    
+    # #使用随机词替换
+    # attacker = AttackerRandom(model, tokenizer, uid_test, args)
+    # results = attacker.attack_all(args,attack_dataset,args.n_iter)    
     
    #使用梯度的词替换并保存结果
     # attacker = Attackertrain(model, tokenizer, uid_train, args)
-    # results = attacker.attack_all(args,train_dataset, args.n_candidate ,args.n_iter)    
+    # results = attacker.attack_all(args,attack_dataset, args.n_candidate ,args.n_iter)    
 
     # #增加或删除部分语句
-    # attacker = InsAttackertrain(model, tokenizer,args)
-    # results = attacker.attack_all(args,train_dataset, args.n_candidate ,args.n_iter)  
+    attacker = InsAttackertrain(model, tokenizer,args)
+    results = attacker.attack_all(args,attack_dataset, args.n_candidate ,args.n_iter)  
 
     # #使用随机词替换
     # attacker = AttackerRandomtrain(model, tokenizer, uid_train, args)
-    # results = attacker.attack_all(args,train_dataset,args.n_iter)   
+    # results = attacker.attack_all(args,attack_dataset,args.n_iter)   
 
     # # # 记录攻击结果
-    # for key, value in results.items():
-    #     logger.info("  %s = %s", key, str(round(value, 5)))
+    for key, value in results.items():
+        logger.info("  %s = %s", key, str(round(value, 5)))
         
     return results
 
@@ -891,6 +926,11 @@ def main():
         help="Whether to run attack on the test set."
     )
     parser.add_argument(
+        "--do_attacktrain", 
+        action="store_true",
+        help="Whether to run attack on the test set."
+    )    
+    parser.add_argument(
         "--attack_type",
         type=str,
         default="token_random",
@@ -911,32 +951,30 @@ def main():
     )
     parser.add_argument(
         "--attack_train",
-        default="/root/workspace/zlt/Ygraphcodebert/dataset/attack.jsonl",
+        default="/root/workspace/zlt/unixcode_cnn/dataset/attack.jsonl",
         type=str,
         help="保存对抗数据",
     )
     parser.add_argument(
         "--Originally_train_data_file",
-        default="/root/workspace/zlt/Ygraphcodebert/dataset/train.jsonl",
+        default="/root/workspace/zlt/unixcode_cnn/dataset/train.jsonl",
         type=str,
         help="保存原始数据",
     )
 
 
-
-
     args = parser.parse_args()
 
     # Setup distant debugging if needed
-    if args.server_ip and args.server_port:
-        # Distant debugging - see https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
-        import ptvsd
+    # if args.server_ip and args.server_port:
+    #     # Distant debugging - see https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
+    #     import ptvsd
 
-        print("Waiting for debugger attach")
-        ptvsd.enable_attach(
-            address=(args.server_ip, args.server_port), redirect_output=True
-        )
-        ptvsd.wait_for_attach()
+    #     print("Waiting for debugger attach")
+    #     ptvsd.enable_attach(
+    #         address=(args.server_ip, args.server_port), redirect_output=True
+    #     )
+    #     ptvsd.wait_for_attach()
 
     # Setup CUDA, GPU & distributed training
     if args.local_rank == -1 or args.no_cuda:
@@ -1037,7 +1075,7 @@ def main():
         if args.local_rank == 0:
             torch.distributed.barrier()
 
-        # beat_model_bin="/root/workspace/zlt/Ygraphcodebert/code/bast_model/model.bin"
+        # beat_model_bin="/root/workspace/zlt/unixcode_cnn/code/bast_model/model.bin"
         # if os.path.isfile(beat_model_bin):      #判断保存的最好的模型数据在不在，这样可以接着训练，如何想从头训练把这两行注释掉。
         #     print("从上次保存的结构接着跑")
         #     model.load_state_dict(torch.load(beat_model_bin))
@@ -1075,13 +1113,15 @@ def main():
         output_dir = os.path.join(args.output_dir, "{}".format(checkpoint_prefix))
         model.load_state_dict(torch.load(output_dir))
         model.to(args.device)
-        
+        attack_flag = 1
+        attack_dataset = TextDataset(tokenizer, args, args.test_data_file, attack_flag)
+        attack_flag = 0
         # 执行攻击
-        attack_results = attacker(args, model, tokenizer)
+        attack_results = attacker(args, attack_dataset,model, tokenizer)
         
         # 记录攻击结果
-        for key, value in attack_results.items():
-            logger.info("  %s = %s", key, str(round(value, 5)))
+        # for key, value in attack_results.items():
+        #     logger.info("  %s = %s", key, str(round(value, 5)))
 
     return results
 
