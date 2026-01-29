@@ -263,6 +263,10 @@ def train(args, train_dataset, model, my_tokenizer):
         num_workers=4,
         pin_memory=True,
     )
+    if args.do_attacktrain:    
+        attack_flag = 1
+        attack_dataset = TextDataset(tokenizer, args, args.Originally_train_data_file, attack_flag)
+        attack_flag = 0
     args.max_steps = args.epoch * len(train_dataloader)
     args.save_steps = len(train_dataloader)
     args.warmup_steps = len(train_dataloader)
@@ -508,8 +512,10 @@ def train(args, train_dataset, model, my_tokenizer):
                         test(args, model, my_tokenizer)
                     else:
                         test(args, model, my_tokenizer)
-        logger.info("***** Epoch %d 结束，开始执行对抗攻击 *****", idx)
-        attacker(args, model, my_tokenizer)
+        if args.do_attacktrain:    
+            logger.info("***** Epoch %d 结束，开始执行对抗攻击 *****", idx)
+            attacker(args, attack_dataset,model, my_tokenizer)
+        # test(args, model, tokenizer)
 
 
 def evaluate(args, model, my_tokenizer, eval_when_training=False):
@@ -681,7 +687,7 @@ def test(args, model, my_tokenizer):
     return result
 
 
-def attacker(args, model, my_tokenizer):
+def attacker(args, attack_dataset, model, my_tokenizer):
     """
     执行对抗攻击
     """
@@ -831,6 +837,13 @@ def main():
     parser.add_argument(
         "--do_test", action="store_true", help="Whether to run eval on the dev set."
     )
+
+    parser.add_argument(
+        "--do_attacktrain", 
+        action="store_true",
+        help="Whether to run attack on the test set.",
+    )
+
     parser.add_argument(
         "--evaluate_during_training",
         action="store_true",
@@ -1194,8 +1207,11 @@ def main():
         model.load_state_dict(torch.load(output_dir))
         model.to(args.device)
         
+        attack_flag = 1
+        attack_dataset = TextDataset(tokenizer, args, args.test_data_file, attack_flag)
+        attack_flag = 0
         # 执行攻击
-        attack_results = attacker(args, model, my_tokenizer)
+        attack_results = attacker(args, attack_dataset,model, my_tokenizer)
         
         # 记录攻击结果
         for key, value in attack_results.items():
