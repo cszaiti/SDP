@@ -1,0 +1,88 @@
+    python run.py \
+    --output_dir=/root/workspace/zlt/Ygraphcodebert/code/saved_models/ \
+    --tokenizer_name=/root/workspace/zlt/Ygraphcodebert/graphcodebert/ \
+    --model_name_or_path=/root/workspace/zlt/Ygraphcodebert/graphcodebert/pytorch_model.bin \
+    --config_name=/root/workspace/zlt/Ygraphcodebert/graphcodebert/config.json \
+    --model_type=roberta \
+    --do_train \
+    --do_eval \
+    --do_test \
+    --train_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/train.jsonl \
+    --eval_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/valid.jsonl \
+    --test_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/test.jsonl \
+    --epoch 10 \
+    --qz_api 0 \
+    --block_size 500 \
+    --train_batch_size 30 \
+    --eval_batch_size 32 \
+    --learning_rate 2e-5 \
+    --max_grad_norm 1.0 \
+    --evaluate_during_training \
+    --seed 123456
+
+    python run.py \
+    --output_dir=/root/workspace/zlt/Ygraphcodebert/code/saved_models/ \
+    --tokenizer_name=/root/workspace/zlt/Ygraphcodebert/graphcodebert/ \
+    --model_name_or_path=/root/workspace/zlt/Ygraphcodebert/graphcodebert/pytorch_model.bin \
+    --config_name=/root/workspace/zlt/Ygraphcodebert/graphcodebert/config.json \
+    --model_type=roberta \
+    --do_train \
+    --do_eval \
+    --do_test \
+    --train_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/train.jsonl \
+    --eval_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/valid.jsonl \
+    --test_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/test.jsonl \
+    --epoch 10 \
+    --qz_api 1 \
+    --block_size 500 \
+    --train_batch_size 30 \
+    --eval_batch_size 32 \
+    --learning_rate 2e-5 \
+    --max_grad_norm 1.0 \
+    --evaluate_during_training \
+    --seed 123456
+
+
+    python run.py \
+    --output_dir=/root/workspace/zlt/Ygraphcodebert/code/saved_models/ \
+    --tokenizer_name=/root/workspace/zlt/Ygraphcodebert/graphcodebert/ \
+    --model_name_or_path=/root/workspace/zlt/Ygraphcodebert/graphcodebert/pytorch_model.bin \
+    --config_name=/root/workspace/zlt/Ygraphcodebert/graphcodebert/config.json \
+    --model_type=roberta \
+    --do_train \
+    --do_eval \
+    --do_test \
+    --train_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/train.jsonl \
+    --eval_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/valid.jsonl \
+    --test_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/test.jsonl \
+    --epoch 10 \
+    --qz_api 0 \
+    --block_size 500 \
+    --train_batch_size 36 \
+    --eval_batch_size 32 \
+    --learning_rate 2e-5 \
+    --max_grad_norm 1.0 \
+    --evaluate_during_training \
+    --seed 123456
+
+    python run.py \
+    --output_dir=/root/workspace/zlt/Ygraphcodebert/code/saved_models/ \
+    --tokenizer_name=/root/workspace/zlt/Ygraphcodebert/graphcodebert/ \
+    --model_name_or_path=/root/workspace/zlt/Ygraphcodebert/graphcodebert/pytorch_model.bin \
+    --config_name=/root/workspace/zlt/Ygraphcodebert/graphcodebert/config.json \
+    --model_type=roberta \
+    --do_train \
+    --do_eval \
+    --do_test \
+    --train_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/train.jsonl \
+    --eval_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/valid.jsonl \
+    --test_data_file=/root/workspace/zlt/Defect-Detection-main/Defect-Detection-main/dataset-1/test.jsonl \
+    --epoch 10 \
+    --qz_api 1 \
+    --block_size 500 \
+    --train_batch_size 36 \
+    --eval_batch_size 32 \
+    --learning_rate 2e-5 \
+    --max_grad_norm 1.0 \
+    --evaluate_during_training \
+    --seed 123456
