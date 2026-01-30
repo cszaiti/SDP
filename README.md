@@ -39,7 +39,7 @@ After downloading the `pytorch_model.bin` for each model, move it to the folder 
 *   **CodeBERT:** `codebert_graphcodebert_unixcoder/code/codebert/pytorch_model.bin`
 *   **GraphCodeBERT:** `codebert_graphcodebert_unixcoder/code/graphcodebert/pytorch_model.bin`
 *   **UnixCoder:** `codebert_graphcodebert_unixcoder/code/unixcoder-nine/pytorch_model.bin`
-*   **vulberta:** `vulberta/models/VulBERTa/pytorch_model.bin`
+*   **VulBERTa:** `vulberta/models/VulBERTa/pytorch_model.bin`
 
 ### 3. Datasets
 
