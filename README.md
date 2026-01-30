@@ -31,7 +31,7 @@ You need to download the pre-trained model files (`pytorch_model.bin`) from Hugg
 *   **CodeBERT:** [microsoft/codebert-base](https://huggingface.co/microsoft/codebert-base)
 *   **GraphCodeBERT:** [microsoft/graphcodebert-base](https://huggingface.co/microsoft/graphcodebert-base)
 *   **UnixCoder:** [microsoft/unixcoder-base-nine](https://huggingface.co/microsoft/unixcoder-base-nine)
-*   **VulBERTa:** [claudios/VulBERTa-MLP-Devign](https://huggingface.co/claudios/VulBERTa-MLP-Devign)
+*   **VulBERTa:** [yakov2210/vulberta_devign](https://huggingface.co/yakov2210/vulberta_devign)
 
 **Placement Instructions:**
 After downloading the `pytorch_model.bin` for each model, move it to the folder containing its `config.json`. For example:
@@ -39,6 +39,7 @@ After downloading the `pytorch_model.bin` for each model, move it to the folder 
 *   **CodeBERT:** `codebert_graphcodebert_unixcoder/code/codebert/pytorch_model.bin`
 *   **GraphCodeBERT:** `codebert_graphcodebert_unixcoder/code/graphcodebert/pytorch_model.bin`
 *   **UnixCoder:** `codebert_graphcodebert_unixcoder/code/unixcoder-nine/pytorch_model.bin`
+*   **vulberta:** `vulberta/models/VulBERTa/pytorch_model.bin`
 
 ### 3. Datasets
 
