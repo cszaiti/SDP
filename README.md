@@ -1,4 +1,4 @@
-# SDP: Empirical Evaluation of Robustness for Deep Learning-Based Software Defect Prediction Models
+# Empirical Evaluation of Robustness for Deep Learning-Based Software Defect Prediction Models
 
 This repository contains the source code and datasets for the paper **"Empirical Evaluation of Robustness for Deep Learning-Based Software Defect Prediction Models"**.
 
